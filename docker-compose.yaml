@@ -1,0 +1,42 @@
+version: '3'
+services:
+  rabbitmq3:
+    image: rabbitmq:3-alpine
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "secret cookie"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBUTMQ_DEFAULT_PASS: "guest"
+    #ports:
+    #  - 5673:5672 localhost:5673
+    #host : container
+    #5672:5672 means that port 5672 on host will forward all its traffic
+    # to RabbitMQ's main port 5672 in the container. 
+    # Same with management plugin's port 15672:15672.
+
+  orig: 
+    depends_on: ['rabbitmq3']
+    build:
+      context: ./Original
+      dockerfile: Dockerfile
+
+  imed: 
+    depends_on: ['rabbitmq3']
+    build:
+      context: ./Intermediate
+      dockerfile: Dockerfile  
+    command: ["./utils/wait-for-it.sh", "rabbitmq:5672","--",  "npm", "start"]
+    
+  obse: 
+    depends_on: ['rabbitmq3']
+    build:
+      context: ./Observer
+      dockerfile: Dockerfile  
+
+  httpserv:
+    depends_on: ['rabbitmq3']
+    build: 
+      context: ./
+      dockerfile: Dockerfile  
+    ports: ['8080:8080']
+
+  
