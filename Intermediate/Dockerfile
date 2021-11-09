@@ -3,7 +3,4 @@ WORKDIR /
 COPY ./package*.json ./ 
 RUN npm install
 COPY . .
-#CMD ["node", "./intermediate.js"]
-RUN ["chmod", "+x", "./utils/wait-for-it.sh"]
-
-CMD ["npm", "start"]
+CMD ["node", "./intermediate.js"]

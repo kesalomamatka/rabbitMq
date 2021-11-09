@@ -1,42 +1,46 @@
 version: '3'
 services:
+
+  #rabbitmq container
   rabbitmq3:
     image: rabbitmq:3-alpine
     environment:
       RABBITMQ_ERLANG_COOKIE: "secret cookie"
       RABBITMQ_DEFAULT_USER: "guest"
       RABBUTMQ_DEFAULT_PASS: "guest"
-    #ports:
-    #  - 5673:5672 localhost:5673
-    #host : container
-    #5672:5672 means that port 5672 on host will forward all its traffic
-    # to RabbitMQ's main port 5672 in the container. 
-    # Same with management plugin's port 15672:15672.
 
+  #orig container, send MSG_1 _2 _3
   orig: 
     depends_on: ['rabbitmq3']
     build:
       context: ./Original
       dockerfile: Dockerfile
 
+  #imed container subs my.o publish to my.i
   imed: 
     depends_on: ['rabbitmq3']
     build:
       context: ./Intermediate
       dockerfile: Dockerfile  
-    command: ["./utils/wait-for-it.sh", "rabbitmq:5672","--",  "npm", "start"]
-    
+  
+  #obse container subscrib to all topics and write to file in volume
   obse: 
     depends_on: ['rabbitmq3']
     build:
       context: ./Observer
       dockerfile: Dockerfile  
+    volumes:
+      - datavolume:/sharedVolume
 
+  #httpserv container read fine from volume
   httpserv:
     depends_on: ['rabbitmq3']
     build: 
       context: ./
       dockerfile: Dockerfile  
     ports: ['8080:8080']
-
-  
+    volumes:
+      - datavolume:/sharedVolume
+      
+volumes:
+  datavolume: {}
